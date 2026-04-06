@@ -7,11 +7,23 @@
 </head>
 <body>
     <div class="main-container">
-        <div id="carousels-container">
-        </div>
+        <div id="carousels-container"></div>
         
-        <div id="preview-container">
-            <img id="main-preview" src="" alt="Aperçu du Kart">
+        <div id="preview-section">
+            <div id="preview-container">
+                <img id="main-preview" src="" alt="Aperçu du Kart">
+            </div>
+            
+            <div id="stats-container">
+                <div class="stat-row">
+                    <span>Vitesse</span>
+                    <div class="bar-bg"><div id="stat-speed" class="bar-fill"></div></div>
+                </div>
+                <div class="stat-row">
+                    <span>Accélération</span>
+                    <div class="bar-bg"><div id="stat-accel" class="bar-fill"></div></div>
+                </div>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>

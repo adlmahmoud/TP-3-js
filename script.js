@@ -1,22 +1,23 @@
+// Données avec attributs de statistiques pour le Bonus
 const karts = [
-    { id: 1, src: "images/karts/StandardKartBodyMK8.png" },
-    { id: 2, src: "images/karts/WildWigglerBodyMK8.png" },
-    { id: 3, src: "images/karts/ZeldaMK8Bdasher.png" }
+    { src: "images/karts/StandardKartBodyMK8.png", speed: 3, accel: 4 },
+    { src: "images/karts/WildWigglerBodyMK8.png", speed: 2, accel: 6 },
+    { src: "images/karts/ZeldaMK8Bdasher.png", speed: 6, accel: 2 }
 ];
 
 const roues = [
-    { id: 1, src: "images/wheels/StandardTiresMK8.png" },
-    { id: 2, src: "images/wheels/MonsterTiresMK8.png" },
-    { id: 3, src: "images/wheels/RollerTiresMK8.png" }
+    { src: "images/wheels/StandardTiresMK8.png", speed: 3, accel: 3 },
+    { src: "images/wheels/MonsterTiresMK8.png", speed: 5, accel: 1 },
+    { src: "images/wheels/RollerTiresMK8.png", speed: 1, accel: 6 }
 ];
 
 const deltaplanes = [
-    { id: 1, src: "images/gliders/FlowerGliderMK8.png" },
-    { id: 2, src: "images/gliders/ParachuteGliderMK8.png" },
-    { id: 3, src: "images/gliders/SuperGliderMK8.png" }
+    { src: "images/gliders/SuperGliderMK8.png", speed: 3, accel: 3 },
+    { src: "images/gliders/ParachuteGliderMK8.png", speed: 2, accel: 4 },
+    { src: "images/gliders/FlowerGliderMK8.png", speed: 1, accel: 5 }
 ];
 
-// Matrice des prévisualisations : Ligne = Carrosserie, Colonne = Roues
+// Matrice : Ligne = Karts (Standard, Wiggler, Zelda) | Colonne = Roues (Standard, Monster, Roller)
 const previewMatrix = [
     ["images/previews/IMG_7604.png", "images/previews/IMG_7602.png", "images/previews/IMG_7603.png"],
     ["images/previews/IMG_7607.png", "images/previews/IMG_7605.png", "images/previews/IMG_7606.png"],
@@ -27,7 +28,7 @@ class Carousel {
     constructor(data, onChange) {
         this.data = data;
         this.currentIndex = 0;
-        this.onChange = onChange; // Fonction appelée à chaque changement
+        this.onChange = onChange;
         this.initDOM();
         this.updateView();
     }
@@ -38,7 +39,7 @@ class Carousel {
         this.wrapper = document.createElement("div");
         this.wrapper.className = "carousel";
 
-        // Image estompée (haut)
+        // Image estompée en haut
         this.topImg = document.createElement("img");
         this.topImg.className = "faded-img";
 
@@ -50,7 +51,7 @@ class Carousel {
         this.btnUp.appendChild(imgUp);
         this.btnUp.addEventListener("click", () => this.prev());
 
-        // Conteneur Actif (Bordure jaune)
+        // Conteneur actif central
         this.activeBox = document.createElement("div");
         this.activeBox.className = "active-box";
         this.activeImg = document.createElement("img");
@@ -65,11 +66,10 @@ class Carousel {
         this.btnDown.appendChild(imgDown);
         this.btnDown.addEventListener("click", () => this.next());
 
-        // Image estompée (bas)
+        // Image estompée en bas
         this.bottomImg = document.createElement("img");
         this.bottomImg.className = "faded-img";
 
-        // Assemblage
         this.wrapper.appendChild(this.topImg);
         this.wrapper.appendChild(this.btnUp);
         this.wrapper.appendChild(this.activeBox);
@@ -91,37 +91,51 @@ class Carousel {
         this.activeImg.src = this.data[this.currentIndex].src;
         this.topImg.src = this.data[this.getPrevIndex()].src;
         this.bottomImg.src = this.data[this.getNextIndex()].src;
-        
-        // On avertit le système global qu'un changement a eu lieu
-        if (this.onChange) {
-            this.onChange();
-        }
     }
 
     next() {
         this.currentIndex = this.getNextIndex();
         this.updateView();
+        // Appel du callback SEULEMENT après le clic, pas au chargement initial
+        if (this.onChange) this.onChange(); 
     }
 
     prev() {
         this.currentIndex = this.getPrevIndex();
         this.updateView();
+        // Appel du callback SEULEMENT après le clic, pas au chargement initial
+        if (this.onChange) this.onChange(); 
     }
 }
 
-// Fonction globale pour mettre à jour l'image de Mario
+// Variable de sécurité pour s'assurer que les 3 carrousels sont créés avant d'afficher Mario
+let isReady = false;
+
+// Fonction appelée pour mettre à jour l'image finale ET le bonus
 const updateMainPreview = () => {
+    if (!isReady) return; // Si les 3 ne sont pas prêts, on bloque l'exécution
+
     const bodyIdx = kartCarousel.currentIndex;
     const tireIdx = wheelCarousel.currentIndex;
+    const gliderIdx = gliderCarousel.currentIndex;
     
-    // On va chercher l'image correspondante dans la matrice 2D
+    // 1. Mise à jour de l'image de Mario
     document.getElementById("main-preview").src = previewMatrix[bodyIdx][tireIdx];
+
+    // 2. Calcul du Bonus (Addition des stats)
+    const totalSpeed = karts[bodyIdx].speed + roues[tireIdx].speed + deltaplanes[gliderIdx].speed;
+    const totalAccel = karts[bodyIdx].accel + roues[tireIdx].accel + deltaplanes[gliderIdx].accel;
+
+    // Mise à jour de la largeur des barres en CSS (sur une échelle arbitraire de 14 max)
+    document.getElementById("stat-speed").style.width = (totalSpeed / 14 * 100) + "%";
+    document.getElementById("stat-accel").style.width = (totalAccel / 14 * 100) + "%";
 };
 
-// Création des 3 instances
+// Instanciation des 3 objets
 const kartCarousel = new Carousel(karts, updateMainPreview);
 const wheelCarousel = new Carousel(roues, updateMainPreview);
 const gliderCarousel = new Carousel(deltaplanes, updateMainPreview);
 
-// Premier affichage
+// Maintenant que les 3 existent, on donne le feu vert et on affiche le rendu
+isReady = true;
 updateMainPreview();
